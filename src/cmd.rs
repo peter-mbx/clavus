@@ -9,7 +9,12 @@ pub enum ConfigCommands {
         #[arg(long = "name", required = true)]
         name: String,
     },
-    #[command(arg_required_else_help = true, about = "add a file to a configuration")]
+    #[command(arg_required_else_help = true, about = "delete configuration")]
+    Delete {
+        #[arg(long = "name", required = true)]
+        name: String,
+    },
+    #[command(arg_required_else_help = true, about = "add a file to configuration")]
     AddFile {
         #[arg(long = "config-name", required = true)]
         config_name: String,
@@ -22,7 +27,7 @@ pub enum ConfigCommands {
     },
     #[command(
         arg_required_else_help = true,
-        about = "delete file from a configuration"
+        about = "delete file from configuration"
     )]
     DeleteFile {
         #[arg(long = "config-name", required = true)]
@@ -30,10 +35,26 @@ pub enum ConfigCommands {
         #[arg(long = "id", required = true)]
         id: String,
     },
-    #[command(arg_required_else_help = true, about = "delete configuration")]
-    Delete {
-        #[arg(long = "name", required = true)]
-        name: String,
+    #[command(arg_required_else_help = true, about = "add command to configuration")]
+    AddCommand {
+        #[arg(long = "config-name", required = true)]
+        config_name: String,
+        #[arg(long = "id", required = true)]
+        id: String,
+        #[arg(long = "up", required = true)]
+        up: String,
+        #[arg(long = "down", required = true)]
+        down: String,
+    },
+    #[command(
+        arg_required_else_help = true,
+        about = "delete command from configuration"
+    )]
+    DeleteCommand {
+        #[arg(long = "config-name", required = true)]
+        config_name: String,
+        #[arg(long = "id", required = true)]
+        id: String,
     },
     #[command(arg_required_else_help = true, about = "activate a configuration")]
     Up {

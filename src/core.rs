@@ -5,6 +5,8 @@ use crate::util::{
 use base64::prelude::*;
 use colored::Colorize;
 use std::fs::{create_dir_all, remove_file};
+use std::process::Command;
+use which::which;
 
 pub fn init() {
     let _ = create_dir_all(&*CLAVUS_DIR);
@@ -13,6 +15,7 @@ pub fn init() {
         let confs = vec![data::Config {
             name: "default".to_string(),
             files: Vec::<data::File>::new(),
+            commands: Vec::<data::Command>::new(),
         }];
         let state = data::State {
             configs: confs,
@@ -62,6 +65,22 @@ pub fn create_conf(conf: data::Config) {
     println!("{} created", config_name.yellow());
 }
 
+pub fn delete_conf(name: String) {
+    let mut state = (*CLAVUS_STATE).clone();
+    let pos = state.configs.iter().position(|x| x.name == name);
+    if !pos.is_some() {
+        println!("{} does not exists", name.red());
+        return;
+    }
+
+    state.configs.retain(|x| x.name != name);
+    if state.active == name {
+        state.active = "".to_string()
+    }
+    write_state(state);
+    println!("{} deleted", name.yellow());
+}
+
 pub fn add_file(config_name: String, file: data::File) {
     let mut state = (*CLAVUS_STATE).clone();
     if state.active == config_name {
@@ -77,7 +96,7 @@ pub fn add_file(config_name: String, file: data::File) {
     let fexists = conf.files.iter().position(|x| x.id == file.id);
     if fexists.is_some() {
         println!(
-            "{} in {} already exists",
+            "file {} in {} already exists",
             file.id.red(),
             config_name.green()
         );
@@ -109,20 +128,55 @@ pub fn delete_file(config_name: String, fileid: String) {
     );
 }
 
-pub fn delete_conf(name: String) {
+pub fn add_command(config_name: String, command: data::Command) {
     let mut state = (*CLAVUS_STATE).clone();
-    let pos = state.configs.iter().position(|x| x.name == name);
-    if !pos.is_some() {
-        println!("{} does not exists", name.red());
+    if state.active == config_name {
+        println!("{} is active. deactivate it first", config_name.green());
         return;
     }
-
-    state.configs.retain(|x| x.name != name);
-    if state.active == name {
-        state.active = "".to_string()
+    let pos = state.configs.iter().position(|x| x.name == config_name);
+    if !pos.is_some() {
+        println!("{} does not exists", config_name.red());
+        return;
     }
+    let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
+    let cexists = conf.commands.iter().position(|x| x.id == command.id);
+    if cexists.is_some() {
+        println!(
+            "command {} in {} already exists",
+            command.id.red(),
+            config_name.green()
+        );
+        return;
+    }
+    conf.commands.push(command.clone());
     write_state(state);
-    println!("{} deleted", name.yellow());
+    println!(
+        "command {} added in {}",
+        command.id.yellow(),
+        config_name.green()
+    );
+}
+
+pub fn delete_command(config_name: String, commandid: String) {
+    let mut state = (*CLAVUS_STATE).clone();
+    if state.active == config_name {
+        println!("{} is active. deactivate it first", config_name.red());
+        return;
+    }
+    let pos = state.configs.iter().position(|x| x.name == config_name);
+    if !pos.is_some() {
+        println!("{} does not exists", config_name.red());
+        return;
+    }
+    let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
+    conf.commands.retain(|x| x.id != commandid);
+    write_state(state);
+    println!(
+        "command {} in {} deleted",
+        commandid.yellow(),
+        config_name.green()
+    );
 }
 
 pub fn activate_conf(name: String) {
@@ -141,6 +195,16 @@ pub fn activate_conf(name: String) {
         return;
     }
     let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
+
+    for c in &mut conf.commands {
+        let mut full_command: Vec<String> = c.up.split(" ").map(|s| s.to_string()).collect();
+        let command = full_command.remove(0);
+        let command_path = which(command).unwrap();
+        let _ = Command::new(command_path)
+            .args(full_command)
+            .spawn()
+            .unwrap();
+    }
 
     for f in &mut conf.files {
         if f.target.exists() {
@@ -168,6 +232,16 @@ pub fn deactivate_conf() {
 
     let pos = state.configs.iter().position(|x| x.name == state.active);
     let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
+
+    for c in &mut conf.commands {
+        let mut full_command: Vec<String> = c.down.split(" ").map(|s| s.to_string()).collect();
+        let command = full_command.remove(0);
+        let command_path = which(command).unwrap();
+        let _ = Command::new(command_path)
+            .args(full_command)
+            .spawn()
+            .unwrap();
+    }
 
     for f in &mut conf.files {
         if f.old_content.is_some() {

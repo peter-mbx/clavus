@@ -25,8 +25,12 @@ fn main() {
                 let conf = data::Config {
                     name,
                     files: Vec::<data::File>::new(),
+                    commands: Vec::<data::Command>::new(),
                 };
                 core::create_conf(conf);
+            }
+            cmd::ConfigCommands::Delete { name } => {
+                core::delete_conf(name);
             }
             cmd::ConfigCommands::AddFile {
                 config_name,
@@ -45,8 +49,18 @@ fn main() {
             cmd::ConfigCommands::DeleteFile { config_name, id } => {
                 core::delete_file(config_name, id);
             }
-            cmd::ConfigCommands::Delete { name } => {
-                core::delete_conf(name);
+            cmd::ConfigCommands::AddCommand {
+                config_name,
+                id,
+                up,
+                down,
+            } => {
+                let command = data::Command { id, up, down };
+
+                core::add_command(config_name, command);
+            }
+            cmd::ConfigCommands::DeleteCommand { config_name, id } => {
+                core::delete_command(config_name, id);
             }
             cmd::ConfigCommands::Up { name } => {
                 core::activate_conf(name);
