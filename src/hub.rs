@@ -202,7 +202,8 @@ pub fn activate_conf(name: String) {
         let _ = Command::new(command_path)
             .args(full_command)
             .spawn()
-            .unwrap();
+            .unwrap()
+            .wait();
     }
 
     for f in &mut conf.files {
@@ -241,7 +242,8 @@ pub fn deactivate_conf() {
         let _ = Command::new(command_path)
             .args(full_command)
             .spawn()
-            .unwrap();
+            .unwrap()
+            .wait();
     }
 
     for f in &mut conf.files {
@@ -261,7 +263,7 @@ pub fn deactivate_conf() {
         } else {
             let _ = remove_file(f.target.clone()).unwrap();
         }
-        if f.old_permissions.is_some(){
+        if f.old_permissions.is_some() {
             f.old_permissions = None;
         }
     }
