@@ -261,6 +261,9 @@ pub fn deactivate_conf() {
         } else {
             let _ = remove_file(f.target.clone()).unwrap();
         }
+        if f.old_permissions.is_some(){
+            f.old_permissions = None;
+        }
     }
 
     state.active = "".to_string();
