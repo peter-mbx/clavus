@@ -22,6 +22,14 @@ pub struct File {
     pub target: PathBuf,
     pub content: String,
     pub old_content: Option<String>,
+    pub permissions: FilePermissions,
+    pub old_permissions: Option<FilePermissions>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FilePermissions {
+    pub mode: Option<String>,
+    pub readonly: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -1,36 +1,36 @@
 use base64::prelude::*;
 use clap::Parser;
 pub mod cmd;
-pub mod core;
 pub mod data;
+pub mod hub;
 pub mod util;
 
 fn main() {
-    core::init();
+    util::init();
 
     let args = cmd::Cli::parse();
 
     match args.command {
         cmd::MainCommands::State => {
-            core::show_state();
+            hub::show_state();
         }
         cmd::MainCommands::Status => {
-            core::show_status();
+            hub::show_status();
         }
         cmd::MainCommands::List => {
-            core::list();
+            hub::list();
         }
         cmd::MainCommands::Config(config) => match config.command {
-            cmd::ConfigCommands::New { name } => {
+            cmd::ConfigCommands::New { config_name } => {
                 let conf = data::Config {
-                    name,
+                    name: config_name,
                     files: Vec::<data::File>::new(),
                     commands: Vec::<data::Command>::new(),
                 };
-                core::create_conf(conf);
+                hub::create_conf(conf);
             }
-            cmd::ConfigCommands::Delete { name } => {
-                core::delete_conf(name);
+            cmd::ConfigCommands::Delete { config_name } => {
+                hub::delete_conf(config_name);
             }
             cmd::ConfigCommands::AddFile {
                 config_name,
@@ -40,14 +40,16 @@ fn main() {
             } => {
                 let file = data::File {
                     id,
-                    target: target.clone(),
-                    content: BASE64_STANDARD.encode(util::read_file(source)),
+                    target,
+                    content: BASE64_STANDARD.encode(util::read_file(source.clone())),
                     old_content: None,
+                    permissions: util::get_file_permissions(source),
+                    old_permissions: None,
                 };
-                core::add_file(config_name, file);
+                hub::add_file(config_name, file);
             }
             cmd::ConfigCommands::DeleteFile { config_name, id } => {
-                core::delete_file(config_name, id);
+                hub::delete_file(config_name, id);
             }
             cmd::ConfigCommands::AddCommand {
                 config_name,
@@ -57,16 +59,16 @@ fn main() {
             } => {
                 let command = data::Command { id, up, down };
 
-                core::add_command(config_name, command);
+                hub::add_command(config_name, command);
             }
             cmd::ConfigCommands::DeleteCommand { config_name, id } => {
-                core::delete_command(config_name, id);
+                hub::delete_command(config_name, id);
             }
-            cmd::ConfigCommands::Up { name } => {
-                core::activate_conf(name);
+            cmd::ConfigCommands::Up { config_name } => {
+                hub::activate_conf(config_name);
             }
             cmd::ConfigCommands::Down => {
-                core::deactivate_conf();
+                hub::deactivate_conf();
             }
         },
     }

@@ -1,29 +1,10 @@
-use crate::data;
-use crate::util::{
-    read_file, write_file, write_state, CLAVUS_DIR, CLAVUS_STATE, CLAVUS_STATE_FILE,
-};
+use crate::util::{read_file, write_file, write_state, CLAVUS_STATE};
+use crate::{data, util};
 use base64::prelude::*;
 use colored::Colorize;
-use std::fs::{create_dir_all, remove_file};
+use std::fs::remove_file;
 use std::process::Command;
 use which::which;
-
-pub fn init() {
-    let _ = create_dir_all(&*CLAVUS_DIR);
-
-    if !(&*CLAVUS_STATE_FILE).to_path_buf().exists() {
-        let confs = vec![data::Config {
-            name: "default".to_string(),
-            files: Vec::<data::File>::new(),
-            commands: Vec::<data::Command>::new(),
-        }];
-        let state = data::State {
-            configs: confs,
-            active: "".to_string(),
-        };
-        write_state(state);
-    }
-}
 
 pub fn show_state() {
     let state = (*CLAVUS_STATE).clone();
@@ -107,7 +88,7 @@ pub fn add_file(config_name: String, file: data::File) {
     println!("file {} added in {}", file.id.yellow(), config_name.green());
 }
 
-pub fn delete_file(config_name: String, fileid: String) {
+pub fn delete_file(config_name: String, file_id: String) {
     let mut state = (*CLAVUS_STATE).clone();
     if state.active == config_name {
         println!("{} is active. deactivate it first", config_name.red());
@@ -119,11 +100,20 @@ pub fn delete_file(config_name: String, fileid: String) {
         return;
     }
     let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
-    conf.files.retain(|x| x.id != fileid);
+    let fexists = conf.files.iter().position(|x| x.id == file_id);
+    if !fexists.is_some() {
+        println!(
+            "file {} in {} does not exists",
+            file_id.red(),
+            config_name.green()
+        );
+        return;
+    }
+    conf.files.retain(|x| x.id != file_id);
     write_state(state);
     println!(
         "file {} in {} deleted",
-        fileid.yellow(),
+        file_id.yellow(),
         config_name.green()
     );
 }
@@ -158,7 +148,7 @@ pub fn add_command(config_name: String, command: data::Command) {
     );
 }
 
-pub fn delete_command(config_name: String, commandid: String) {
+pub fn delete_command(config_name: String, command_id: String) {
     let mut state = (*CLAVUS_STATE).clone();
     if state.active == config_name {
         println!("{} is active. deactivate it first", config_name.red());
@@ -170,11 +160,20 @@ pub fn delete_command(config_name: String, commandid: String) {
         return;
     }
     let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
-    conf.commands.retain(|x| x.id != commandid);
+    let cexists = conf.commands.iter().position(|x| x.id == command_id);
+    if !cexists.is_some() {
+        println!(
+            "command {} in {} already exists",
+            command_id.red(),
+            config_name.green()
+        );
+        return;
+    }
+    conf.commands.retain(|x| x.id != command_id);
     write_state(state);
     println!(
         "command {} in {} deleted",
-        commandid.yellow(),
+        command_id.yellow(),
         config_name.green()
     );
 }
@@ -208,13 +207,15 @@ pub fn activate_conf(name: String) {
 
     for f in &mut conf.files {
         if f.target.exists() {
-            f.old_content = Some(BASE64_STANDARD.encode(read_file(f.target.clone())))
+            f.old_content = Some(BASE64_STANDARD.encode(read_file(f.target.clone())));
+            f.old_permissions = Some(util::get_file_permissions(f.target.clone()));
         }
         write_file(
             f.target.clone(),
             std::str::from_utf8(&BASE64_STANDARD.decode(f.content.clone()).unwrap())
                 .unwrap()
                 .to_string(),
+            Some(f.permissions.clone()),
         );
     }
 
@@ -254,6 +255,7 @@ pub fn deactivate_conf() {
                 )
                 .unwrap()
                 .to_string(),
+                f.old_permissions.clone(),
             );
             f.old_content = None;
         } else {

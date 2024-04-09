@@ -6,13 +6,13 @@ use std::path::PathBuf;
 pub enum ConfigCommands {
     #[command(arg_required_else_help = true, about = "create new configuration")]
     New {
-        #[arg(long = "name", required = true)]
-        name: String,
+        #[arg(long = "config-name", required = true)]
+        config_name: String,
     },
     #[command(arg_required_else_help = true, about = "delete configuration")]
     Delete {
-        #[arg(long = "name", required = true)]
-        name: String,
+        #[arg(long = "config-name", required = true)]
+        config_name: String,
     },
     #[command(arg_required_else_help = true, about = "add a file to configuration")]
     AddFile {
@@ -58,8 +58,8 @@ pub enum ConfigCommands {
     },
     #[command(arg_required_else_help = true, about = "activate a configuration")]
     Up {
-        #[arg(long = "name", required = true)]
-        name: String,
+        #[arg(long = "config-name", required = true)]
+        config_name: String,
     },
     #[command(about = "deactivate a configuration")]
     Down,
