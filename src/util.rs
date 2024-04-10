@@ -37,6 +37,7 @@ pub fn get_file_permissions(path: PathBuf) -> data::FilePermissions {
 }
 
 pub fn write_file(path: PathBuf, content: String, permissions: Option<data::FilePermissions>) {
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
     let file = OpenOptions::new()
         .create(true)
         .write(true)
