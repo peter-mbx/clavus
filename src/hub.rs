@@ -33,6 +33,101 @@ pub fn list() {
     }
 }
 
+pub fn activate_conf(name: String) {
+    let mut state = (*CLAVUS_STATE).clone();
+    if state.active == name {
+        println!("{} already active", name.green());
+        return;
+    }
+    if state.active != "".to_string() {
+        println!("{} is active. deactivate it first", state.active.red());
+        return;
+    }
+    let pos = state.configs.iter().position(|x| x.name == name);
+    if !pos.is_some() {
+        println!("{} does not exists", name.red());
+        return;
+    }
+    let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
+
+    for c in &mut conf.commands {
+        let mut full_command: Vec<String> = c.up.split(" ").map(|s| s.to_string()).collect();
+        let command = full_command.remove(0);
+        let command_path = which(command).unwrap();
+        let _ = Command::new(command_path)
+            .args(full_command)
+            .spawn()
+            .unwrap()
+            .wait();
+    }
+
+    for f in &mut conf.files {
+        if f.target.exists() {
+            f.old_content = Some(BASE64_STANDARD.encode(read_file(f.target.clone())));
+            f.old_permissions = Some(util::get_file_permissions(f.target.clone()));
+        }
+        write_file(
+            f.target.clone(),
+            std::str::from_utf8(&BASE64_STANDARD.decode(f.content.clone()).unwrap())
+                .unwrap()
+                .to_string(),
+            Some(f.permissions.clone()),
+        );
+    }
+
+    state.active = name.clone();
+    write_state(state);
+    println!("{} activated", name.yellow());
+}
+
+pub fn deactivate_conf() {
+    let mut state = (*CLAVUS_STATE).clone();
+    if state.active == "".to_string() {
+        println!("{}", "no active config".yellow());
+        return;
+    }
+
+    let pos = state.configs.iter().position(|x| x.name == state.active);
+    let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
+
+    for c in &mut conf.commands {
+        let mut full_command: Vec<String> = c.down.split(" ").map(|s| s.to_string()).collect();
+        let command = full_command.remove(0);
+        let command_path = which(command).unwrap();
+        let _ = Command::new(command_path)
+            .args(full_command)
+            .spawn()
+            .unwrap()
+            .wait();
+    }
+
+    for f in &mut conf.files {
+        if f.old_content.is_some() {
+            write_file(
+                f.target.clone(),
+                std::str::from_utf8(
+                    &BASE64_STANDARD
+                        .decode(f.old_content.clone().unwrap())
+                        .unwrap(),
+                )
+                .unwrap()
+                .to_string(),
+                f.old_permissions.clone(),
+            );
+            f.old_content = None;
+        } else {
+            let _ = remove_file(f.target.clone()).unwrap();
+        }
+        if f.old_permissions.is_some() {
+            f.old_permissions = None;
+        }
+    }
+
+    state.active = "".to_string();
+    write_state(state);
+    println!("{}", "deactivated".yellow());
+}
+
 pub fn create_conf(conf: data::Config) {
     let mut state = (*CLAVUS_STATE).clone();
     let config_name = conf.name.clone();
@@ -176,99 +271,4 @@ pub fn delete_command(config_name: String, command_id: String) {
         command_id.yellow(),
         config_name.green()
     );
-}
-
-pub fn activate_conf(name: String) {
-    let mut state = (*CLAVUS_STATE).clone();
-    if state.active == name {
-        println!("{} already active", name.green());
-        return;
-    }
-    if state.active != "".to_string() {
-        println!("{} is active. deactivate it first", state.active.red());
-        return;
-    }
-    let pos = state.configs.iter().position(|x| x.name == name);
-    if !pos.is_some() {
-        println!("{} does not exists", name.red());
-        return;
-    }
-    let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
-
-    for c in &mut conf.commands {
-        let mut full_command: Vec<String> = c.up.split(" ").map(|s| s.to_string()).collect();
-        let command = full_command.remove(0);
-        let command_path = which(command).unwrap();
-        let _ = Command::new(command_path)
-            .args(full_command)
-            .spawn()
-            .unwrap()
-            .wait();
-    }
-
-    for f in &mut conf.files {
-        if f.target.exists() {
-            f.old_content = Some(BASE64_STANDARD.encode(read_file(f.target.clone())));
-            f.old_permissions = Some(util::get_file_permissions(f.target.clone()));
-        }
-        write_file(
-            f.target.clone(),
-            std::str::from_utf8(&BASE64_STANDARD.decode(f.content.clone()).unwrap())
-                .unwrap()
-                .to_string(),
-            Some(f.permissions.clone()),
-        );
-    }
-
-    state.active = name.clone();
-    write_state(state);
-    println!("{} activated", name.yellow());
-}
-
-pub fn deactivate_conf() {
-    let mut state = (*CLAVUS_STATE).clone();
-    if state.active == "".to_string() {
-        println!("{}", "no active config".yellow());
-        return;
-    }
-
-    let pos = state.configs.iter().position(|x| x.name == state.active);
-    let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
-
-    for c in &mut conf.commands {
-        let mut full_command: Vec<String> = c.down.split(" ").map(|s| s.to_string()).collect();
-        let command = full_command.remove(0);
-        let command_path = which(command).unwrap();
-        let _ = Command::new(command_path)
-            .args(full_command)
-            .spawn()
-            .unwrap()
-            .wait();
-    }
-
-    for f in &mut conf.files {
-        if f.old_content.is_some() {
-            write_file(
-                f.target.clone(),
-                std::str::from_utf8(
-                    &BASE64_STANDARD
-                        .decode(f.old_content.clone().unwrap())
-                        .unwrap(),
-                )
-                .unwrap()
-                .to_string(),
-                f.old_permissions.clone(),
-            );
-            f.old_content = None;
-        } else {
-            let _ = remove_file(f.target.clone()).unwrap();
-        }
-        if f.old_permissions.is_some() {
-            f.old_permissions = None;
-        }
-    }
-
-    state.active = "".to_string();
-    write_state(state);
-    println!("{}", "deactivated".yellow());
 }

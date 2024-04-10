@@ -20,6 +20,12 @@ fn main() {
         cmd::MainCommands::List => {
             hub::list();
         }
+        cmd::MainCommands::Up { config_name } => {
+            hub::activate_conf(config_name);
+        }
+        cmd::MainCommands::Down => {
+            hub::deactivate_conf();
+        }
         cmd::MainCommands::Config(config) => match config.command {
             cmd::ConfigCommands::New { config_name } => {
                 let conf = data::Config {
@@ -63,12 +69,6 @@ fn main() {
             }
             cmd::ConfigCommands::DeleteCommand { config_name, id } => {
                 hub::delete_command(config_name, id);
-            }
-            cmd::ConfigCommands::Up { config_name } => {
-                hub::activate_conf(config_name);
-            }
-            cmd::ConfigCommands::Down => {
-                hub::deactivate_conf();
             }
         },
     }

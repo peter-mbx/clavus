@@ -4,17 +4,17 @@ use std::path::PathBuf;
 #[derive(Debug, Subcommand)]
 #[group(required = true, multiple = false)]
 pub enum ConfigCommands {
-    #[command(arg_required_else_help = true, about = "create new configuration")]
+    #[command(arg_required_else_help = true, about = "create new configuration\n")]
     New {
         #[arg(long = "config-name", required = true)]
         config_name: String,
     },
-    #[command(arg_required_else_help = true, about = "delete configuration")]
+    #[command(arg_required_else_help = true, about = "delete configuration\n")]
     Delete {
         #[arg(long = "config-name", required = true)]
         config_name: String,
     },
-    #[command(arg_required_else_help = true, about = "add a file to configuration")]
+    #[command(arg_required_else_help = true, about = "add a file to configuration\n")]
     AddFile {
         #[arg(long = "config-name", required = true)]
         config_name: String,
@@ -27,7 +27,7 @@ pub enum ConfigCommands {
     },
     #[command(
         arg_required_else_help = true,
-        about = "delete file from configuration"
+        about = "delete file from configuration\n"
     )]
     DeleteFile {
         #[arg(long = "config-name", required = true)]
@@ -35,7 +35,10 @@ pub enum ConfigCommands {
         #[arg(long = "id", required = true)]
         id: String,
     },
-    #[command(arg_required_else_help = true, about = "add command to configuration")]
+    #[command(
+        arg_required_else_help = true,
+        about = "add command to configuration\n"
+    )]
     AddCommand {
         #[arg(long = "config-name", required = true)]
         config_name: String,
@@ -48,7 +51,7 @@ pub enum ConfigCommands {
     },
     #[command(
         arg_required_else_help = true,
-        about = "delete command from configuration"
+        about = "delete command from configuration\n"
     )]
     DeleteCommand {
         #[arg(long = "config-name", required = true)]
@@ -56,13 +59,6 @@ pub enum ConfigCommands {
         #[arg(long = "id", required = true)]
         id: String,
     },
-    #[command(arg_required_else_help = true, about = "activate a configuration")]
-    Up {
-        #[arg(long = "config-name", required = true)]
-        config_name: String,
-    },
-    #[command(about = "deactivate a configuration")]
-    Down,
 }
 
 #[derive(Debug, Args)]
@@ -80,12 +76,23 @@ pub enum MainCommands {
     Status,
     #[command(about = "list configurations")]
     List,
-    #[command(arg_required_else_help = true, about = "manage configurations")]
+    #[command(arg_required_else_help = true, about = "activate a configuration")]
+    Up {
+        #[arg(long = "config-name", required = true)]
+        config_name: String,
+    },
+    #[command(about = "deactivate a configuration")]
+    Down,
+    #[command(arg_required_else_help = true, about = "edit configurations")]
     Config(ConfigArgs),
 }
 
 #[derive(Debug, Parser)]
-#[command(name = "clavus", about = "Clavum Lateris", long_about = None)]
+#[command(
+    name = "clavus",
+    about = "Clavum Lateris",
+    long_about = "In vetusta bibliotheca, clavum lateris aperiebat fores librarii occultum, ubi sapientia et arcana conservabantur."
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: MainCommands,
