@@ -141,20 +141,24 @@ pub fn create_conf(conf: data::Config) {
     println!("{} created", config_name.yellow());
 }
 
-pub fn delete_conf(name: String) {
+pub fn delete_conf(config_name: String) {
     let mut state = (*CLAVUS_STATE).clone();
-    let pos = state.configs.iter().position(|x| x.name == name);
+    if state.active == config_name {
+        println!("{} is active. deactivate it first", config_name.green());
+        return;
+    }
+    let pos = state.configs.iter().position(|x| x.name == config_name);
     if !pos.is_some() {
-        println!("{} does not exists", name.red());
+        println!("{} does not exists", config_name.red());
         return;
     }
 
-    state.configs.retain(|x| x.name != name);
-    if state.active == name {
+    state.configs.retain(|x| x.name != config_name);
+    if state.active == config_name {
         state.active = "".to_string()
     }
     write_state(state);
-    println!("{} deleted", name.yellow());
+    println!("{} deleted", config_name.yellow());
 }
 
 pub fn add_file(config_name: String, file: data::File) {
