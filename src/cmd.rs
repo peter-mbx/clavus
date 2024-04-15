@@ -90,8 +90,8 @@ pub enum MainCommands {
 #[derive(Debug, Parser)]
 #[command(
     name = "clavus",
-    about = "Clavum Lateris",
-    long_about = "In vetusta bibliotheca, clavum lateris aperiebat fores librarii occultum, ubi sapientia et arcana conservabantur."
+    about = "A lightweight command-line tool designed for anyone in the tech field, specially for IT consultants or professionals managing multiple clients environments.\nThis tool simplifies the management of configurations on your machine, allowing you to configure your environment and load the necessary resources, like files and/or commands.",
+    long_about = None
 )]
 pub struct Cli {
     #[command(subcommand)]
