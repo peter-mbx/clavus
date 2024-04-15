@@ -6,8 +6,6 @@ PortGroup           cargo  1.0
 
 github.setup        peter-mbx clavus 0.0.1
 
-name                clavus
-version             0.0.1
 categories          devel
 revision            0
 
@@ -17,14 +15,14 @@ license             MIT
 description         Clavum Lateris
 long_description    In vetusta bibliotheca, clavum lateris aperiebat fores librarii occultum, ubi sapientia et arcana conservabantur.
 
-homepage            https://github.com/peter-mbx/clavus
-
-checksums           rmd160 8e82f4a700cb59b16a5e998e5c2191781e7adeae \
-                    sha256 bb64672b75d2d459063820b65364798ab9569e14e7ee04a1d5ce514c3c5c18b4 \
-                    size 11428
+checksums           rmd160  d826b4c4370863a74950c9f923e7fa7e32971ec8 \
+                    sha256  9d74fea39c41056bcfab0320eeca3c3f61c34aed2d602b9b3e5894e462973fb2 \
+                    size    11434
 
 use_configure       no
 
+build.pre_args      {--release -v}
+
 destroot {
-    xinstall -m 755 ${workpath}/${distname}/target/release/clavus ${destroot}${prefix}/bin/
+    xinstall -m 0755 ${worksrcpath}/target/[cargo.rust_platform]/release/${name} ${destroot}${prefix}/bin/
 }

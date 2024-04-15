@@ -78,3 +78,16 @@ pub fn init() {
         write_state(state);
     }
 }
+
+pub fn tilde(path: PathBuf, tilde: bool) -> PathBuf {
+    let path_str = path.display().to_string();
+    if tilde {
+        return path_str
+            .replace(&home_dir().unwrap().display().to_string(), "~")
+            .into();
+    } else {
+        return path_str
+            .replace(&"~".to_string(), &home_dir().unwrap().display().to_string())
+            .into();
+    }
+}

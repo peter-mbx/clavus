@@ -46,10 +46,11 @@ fn main() {
             } => {
                 let file = data::File {
                     id,
-                    target,
-                    content: BASE64_STANDARD.encode(util::read_file(source.clone())),
+                    target: util::tilde(target, true),
+                    content: BASE64_STANDARD
+                        .encode(util::read_file(util::tilde(source.clone(), false))),
                     old_content: None,
-                    permissions: util::get_file_permissions(source),
+                    permissions: util::get_file_permissions(util::tilde(source.clone(), false)),
                     old_permissions: None,
                 };
                 hub::add_file(config_name, file);

@@ -62,12 +62,14 @@ pub fn activate_conf(name: String) {
     }
 
     for f in &mut conf.files {
-        if f.target.exists() {
-            f.old_content = Some(BASE64_STANDARD.encode(read_file(f.target.clone())));
-            f.old_permissions = Some(util::get_file_permissions(f.target.clone()));
+        let target = util::tilde(f.target.clone(), false);
+
+        if target.exists() {
+            f.old_content = Some(BASE64_STANDARD.encode(read_file(target.clone())));
+            f.old_permissions = Some(util::get_file_permissions(target.clone()));
         }
         write_file(
-            f.target.clone(),
+            target,
             std::str::from_utf8(&BASE64_STANDARD.decode(f.content.clone()).unwrap())
                 .unwrap()
                 .to_string(),
@@ -102,9 +104,10 @@ pub fn deactivate_conf() {
     }
 
     for f in &mut conf.files {
+        let target = util::tilde(f.target.clone(), false);
         if f.old_content.is_some() {
             write_file(
-                f.target.clone(),
+                target,
                 std::str::from_utf8(
                     &BASE64_STANDARD
                         .decode(f.old_content.clone().unwrap())
@@ -116,7 +119,7 @@ pub fn deactivate_conf() {
             );
             f.old_content = None;
         } else {
-            let _ = remove_file(f.target.clone()).unwrap();
+            let _ = remove_file(target).unwrap();
         }
         if f.old_permissions.is_some() {
             f.old_permissions = None;
