@@ -4,6 +4,7 @@ pub mod cmd;
 pub mod data;
 pub mod hub;
 pub mod util;
+use edit::edit;
 
 fn main() {
     util::init();
@@ -44,13 +45,29 @@ fn main() {
                 source,
                 target,
             } => {
+                let content;
+                let permissions;
+
+                if source.is_some() {
+                    content = BASE64_STANDARD
+                        .encode(util::read_file(util::tilde(source.clone().unwrap(), false)));
+                    permissions =
+                        util::get_file_permissions(util::tilde(source.clone().unwrap(), false));
+                } else {
+                    let res = edit(String::new()).unwrap();
+                    content = BASE64_STANDARD.encode(res);
+                    permissions = data::FilePermissions {
+                        mode: Some("644".to_string()),
+                        readonly: false,
+                    };
+                }
+
                 let file = data::File {
                     id,
                     target: util::tilde(target, true),
-                    content: BASE64_STANDARD
-                        .encode(util::read_file(util::tilde(source.clone(), false))),
+                    content,
                     old_content: None,
-                    permissions: util::get_file_permissions(util::tilde(source.clone(), false)),
+                    permissions,
                     old_permissions: None,
                 };
                 hub::add_file(config_name, file);

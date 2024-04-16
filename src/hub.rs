@@ -157,9 +157,6 @@ pub fn delete_conf(config_name: String) {
     }
 
     state.configs.retain(|x| x.name != config_name);
-    if state.active == config_name {
-        state.active = "".to_string()
-    }
     write_state(state);
     println!("{} deleted", config_name.yellow());
 }

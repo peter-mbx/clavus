@@ -14,14 +14,17 @@ pub enum ConfigCommands {
         #[arg(long = "config-name", required = true)]
         config_name: String,
     },
-    #[command(arg_required_else_help = true, about = "add a file to configuration\n")]
+    #[command(
+        arg_required_else_help = true,
+        about = "add a file to configuration. if no option --source specified, open default editor\n"
+    )]
     AddFile {
         #[arg(long = "config-name", required = true)]
         config_name: String,
         #[arg(long = "id", required = true)]
         id: String,
-        #[arg(long = "source", required = true)]
-        source: PathBuf,
+        #[arg(long = "source")]
+        source: Option<PathBuf>,
         #[arg(long = "target", required = true)]
         target: PathBuf,
     },
