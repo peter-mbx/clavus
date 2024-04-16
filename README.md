@@ -5,6 +5,12 @@
 ## Description
 A lightweight command-line tool designed for anyone in the tech field, specially for IT consultants or professionals managing multiple clients environments. This tool simplifies the management of configurations on your machine, allowing you to configure your environment and load the necessary resources, like files and/or commands.
 
+## About
+The tool reads and writes its state file in `JSON` format, typically located at `~/.clavus/state.json`. This file stores all information about existing configurations, such as files and commands associated with each configuration. Manual editing of this file is not recommended, as it may corrupt the tool's functionality.
+Files are stored as content in `Base64` format, retaining their original permissions. This means that if a source file has permissions set to mode 664 (readonly=false for Windows), these permissions are replicated to the target path when the configuration is activated.
+If a file already exists in the target path, its content is saved in the state file as 'old_content' and its permissions as 'old_permissions'. This allows the file to be restored to its previous state, with its original permissions and content, when the configuration is deactivated.
+I am currently developing support for remotely managing the state file, such as from an AWS bucket, allowing all configurations to be accessed from multiple devices.
+
 ## Installation
 Clone the repository:
 ```sh
@@ -96,13 +102,7 @@ clavus config add-command --config-name <name> --id <id> --up <up_command> --dow
 clavus config delete-command --config-name <name> --id <id>
 ```
 
-## About
-The tool reads and writes its state file in `JSON` format, typically located at `~/.clavus/state.json`. This file stores all information about existing configurations, such as files and commands associated with each configuration. Manual editing of this file is not recommended, as it may corrupt the tool's functionality.
-Files are stored as content in `Base64` format, retaining their original permissions. This means that if a source file has permissions set to mode 664 (readonly=false for Windows), these permissions are replicated to the target path when the configuration is activated.
-If a file already exists in the target path, its content is saved in the state file as 'old_content' and its permissions as 'old_permissions'. This allows the file to be restored to its previous state, with its original permissions and content, when the configuration is deactivated.
-I am currently developing support for remotely managing the state file, such as from an AWS bucket, allowing all configurations to be accessed from multiple devices.
-
-### An example of a state file with one configuration:
+### Example of a state file:
 
 ```
 {
