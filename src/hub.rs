@@ -50,17 +50,6 @@ pub fn activate_conf(name: String) {
     }
     let conf: &mut data::Config = &mut state.configs[pos.unwrap()];
 
-    for c in &mut conf.commands {
-        let mut full_command: Vec<String> = c.up.split(" ").map(|s| s.to_string()).collect();
-        let command = full_command.remove(0);
-        let command_path = which(command).unwrap();
-        let _ = Command::new(command_path)
-            .args(full_command)
-            .spawn()
-            .unwrap()
-            .wait();
-    }
-
     for f in &mut conf.files {
         let target = util::tilde(f.target.clone(), false);
 
@@ -75,6 +64,17 @@ pub fn activate_conf(name: String) {
                 .to_string(),
             Some(f.permissions.clone()),
         );
+    }
+
+    for c in &mut conf.commands {
+        let mut full_command: Vec<String> = c.up.split(" ").map(|s| s.to_string()).collect();
+        let command = full_command.remove(0);
+        let command_path = which(command).unwrap();
+        let _ = Command::new(command_path)
+            .args(full_command)
+            .spawn()
+            .unwrap()
+            .wait();
     }
 
     state.active = name.clone();
